@@ -93,7 +93,7 @@
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-eval("const planetsData = __webpack_require__(/*! ./data/planets.js */ \"./src/data/planets.js\");\nconst SolarSystem = __webpack_require__(/*! ./models/solar_system.js */ \"./src/models/solar_system.js\");\n\ndocument.addEventListener('DOMContentLoaded', () => {\n  const planetsDataModel = new SolarSystem(planetsData);\n  console.log(planetsDataModel.planets);\n});\n\n\n//# sourceURL=webpack:///./src/app.js?");
+eval("const planetsData = __webpack_require__(/*! ./data/planets.js */ \"./src/data/planets.js\");\nconst SolarSystem = __webpack_require__(/*! ./models/solar_system.js */ \"./src/models/solar_system.js\");\nconst SelectView = __webpack_require__(/*! ./views/select_view.js */ \"./src/views/select_view.js\");\nconst PlanetInfoView = __webpack_require__(/*! ./views/planet_info_view.js */ \"./src/views/planet_info_view.js\");\n\ndocument.addEventListener('DOMContentLoaded', () => {\n  const solarSystem = new SolarSystem(planetsData);\n  solarSystem.bindEvents();\n\n  const selectView = new SelectView();\n  selectView.bindEvents();\n\n  const planetInfoView = new PlanetInfoView();\n  planetInfoView.bindEvents();\n});\n\n\n//# sourceURL=webpack:///./src/app.js?");
 
 /***/ }),
 
@@ -108,14 +108,47 @@ eval("const planets = [\n  {\n    name: 'Mercury',\n    orbit: 87.969,\n    day:
 
 /***/ }),
 
+/***/ "./src/helpers/pub_sub.js":
+/*!********************************!*\
+  !*** ./src/helpers/pub_sub.js ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+eval("const PubSub = {\n  publish: function(channel, payload){\n    console.log(`published on channel:`, channel);\n    console.log('published data:', payload);\n    const event = new CustomEvent(channel, {\n      detail: payload\n    });\n    document.dispatchEvent(event);\n  },\n\n  subscribe: function(channel, callback){\n    console.log(`subscribed to channel: ${channel}`);\n    document.addEventListener(channel, callback);\n  }\n};\n\nmodule.exports = PubSub;\n\n\n//# sourceURL=webpack:///./src/helpers/pub_sub.js?");
+
+/***/ }),
+
 /***/ "./src/models/solar_system.js":
 /*!************************************!*\
   !*** ./src/models/solar_system.js ***!
   \************************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-eval("const SolarSystem = function(planets) {\n  this.planets = planets;\n};\n\nmodule.exports = SolarSystem;\n\n\n//# sourceURL=webpack:///./src/models/solar_system.js?");
+eval("const PubSub = __webpack_require__(/*! ../helpers/pub_sub.js */ \"./src/helpers/pub_sub.js\");\n\nconst SolarSystem = function(planets) {\n  this.planets = planets;\n  console.log(this.planets);\n};\n\nSolarSystem.prototype.bindEvents = function () {\n  PubSub.subscribe('SelectView:planet-selected', (event) => {\n    const selectedPlanet = event.detail;\n    const result = this.findPlanet(selectedPlanet);\n    PubSub.publish('Planets:selected-planet-ready', result);\n  });\n};\n\nSolarSystem.prototype.findPlanet = function (selectedPlanet) {\n  for (const planet of this.planets) {\n    if (planet.name === selectedPlanet) {\n      return planet\n    }\n  }\n};\n\n\nmodule.exports = SolarSystem;\n\n\n//# sourceURL=webpack:///./src/models/solar_system.js?");
+
+/***/ }),
+
+/***/ "./src/views/planet_info_view.js":
+/*!***************************************!*\
+  !*** ./src/views/planet_info_view.js ***!
+  \***************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+eval("const PubSub = __webpack_require__(/*! ../helpers/pub_sub.js */ \"./src/helpers/pub_sub.js\");\n\nconst PlanetInfoView = function () {\n};\n\nPlanetInfoView.prototype.bindEvents = function () {\n  PubSub.subscribe('Planets:selected-planet-ready', (event) => {\n    const planet = event.detail;\n    this.render(planet);\n  });\n};\n\nPlanetInfoView.prototype.render = function (planet) {\n  const container = document.querySelector('.planet-details');\n\n  const infoParagraph = document.createElement('li');\n  infoParagraph.textContent = `Name: ${planet.name}`;\n  container.appendChild(infoParagraph);\n\n  const infoParagraph2 = document.createElement('li');\n  infoParagraph2.textContent = `Day: ${planet.day} Earth Days`;\n  container.appendChild(infoParagraph2);\n\n  const infoParagraph3 = document.createElement('li');\n  infoParagraph3.textContent = `Orbit: ${planet.orbit} Earth Days`;\n  container.appendChild(infoParagraph3);\n\n  const infoParagraph4 = document.createElement('li');\n  infoParagraph4.textContent = `Surface Area: ${planet.surfaceArea} Earths`;\n  container.appendChild(infoParagraph4);\n\n  const infoParagraph5 = document.createElement('li');\n  infoParagraph5.textContent = `Volume: ${planet.volume} Earths`;\n  container.appendChild(infoParagraph5);\n\n  const infoParagraph6 = document.createElement('li');\n  infoParagraph6.textContent = `Gravity: ${planet.gravity} G`;\n  container.appendChild(infoParagraph6);\n\n  const infoParagraph7 = document.createElement('li');\n  infoParagraph7.textContent = `Moons: ${planet.moons}`;\n  container.appendChild(infoParagraph7);\n\n  const infoParagraph8 = document.createElement('img');\n  infoParagraph8.setAttribute(\"src\", `${planet.image}`);\n  container.appendChild(infoParagraph8);\n\n\n\n\n};\n\nmodule.exports = PlanetInfoView;\n\n\n//# sourceURL=webpack:///./src/views/planet_info_view.js?");
+
+/***/ }),
+
+/***/ "./src/views/select_view.js":
+/*!**********************************!*\
+  !*** ./src/views/select_view.js ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+eval("const PubSub = __webpack_require__(/*! ../helpers/pub_sub.js */ \"./src/helpers/pub_sub.js\");\n\nconst SelectView = function () {\n\n}\n\nSelectView.prototype.bindEvents = function () {\n  const nav = document.querySelector('.planets-menu');\n  nav.addEventListener('click', (event) => {\n    const selectedPlanet = event.target.id;\n    PubSub.publish('SelectView:planet-selected', selectedPlanet);\n  });\n};\n\nmodule.exports = SelectView;\n\n\n//# sourceURL=webpack:///./src/views/select_view.js?");
 
 /***/ })
 
